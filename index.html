@@ -35,11 +35,73 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Three.js Library -->
+  <!-- Preconnect & High Priority Preloads for Instant 3D Model Loading -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@splinetool/viewer/build/spline-viewer.js">
+  <link rel="preload" href="model/NEXBOT_robot_character_concept.splinecode" as="fetch" crossorigin="anonymous">
+  <script>
+    // Immediate memory prefetch of 3D Spline model binary
+    window._splineModelPreload = fetch('model/NEXBOT_robot_character_concept.splinecode', { cache: 'force-cache' }).catch(function(){});
+  </script>
+  
+  <!-- Three.js Library (used by the certifications 3D scene) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Spline Viewer -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer/build/spline-viewer.js"></script>
   
   <!-- Styling -->
   <link rel="stylesheet" href="style.css">
+
+  <!-- Structured Data: Person schema for rich Google results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Peeyush Tiwari",
+    "url": "https://portfoliopeeyush.netlify.app/",
+    "image": "https://portfoliopeeyush.netlify.app/profile.jpg",
+    "jobTitle": "AI Engineer, Python Developer & Android Developer",
+    "email": "mailto:peeyushtiwari03@gmail.com",
+    "telephone": "+91-9202261369",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Amarkantak",
+      "addressRegion": "MP",
+      "addressCountry": "IN"
+    },
+    "alumniOf": {
+      "@type": "CollegeOrUniversity",
+      "name": "Indira Gandhi National Tribal University (IGNTU)"
+    },
+    "knowsAbout": ["Artificial Intelligence", "Machine Learning", "Python", "Agentic AI", "LLM Integration", "OpenCV", "Kotlin", "Android Development"],
+    "sameAs": [
+      "https://github.com/peeyushtiwari",
+      "https://linkedin.com/in/peeyushtiwari18",
+      "https://x.com/Peeyush69537028"
+    ]
+  }
+  </script>
+
+  <!-- Low-power / weak-phone detection: runs before paint so CSS & JS can lighten the page -->
+  <script>
+    (function () {
+      try {
+        var smallScreen = window.matchMedia('(max-width: 768px)').matches;
+        var fewCores = (navigator.hardwareConcurrency || 8) <= 4;
+        var lowMem = (navigator.deviceMemory || 8) <= 4;
+        var coarse = window.matchMedia('(pointer: coarse)').matches;
+        var slowNet = navigator.connection && /2g|slow-2g|3g/.test(navigator.connection.effectiveType || '');
+        var saveData = navigator.connection && navigator.connection.saveData;
+        // Low-power if a touch/small device is ALSO resource constrained, or data-saver is on.
+        var lowPower = !!(saveData || slowNet || ((smallScreen || coarse) && (fewCores || lowMem)));
+        if (lowPower) document.documentElement.classList.add('low-power');
+        window.__LOW_POWER__ = lowPower;
+      } catch (e) {
+        window.__LOW_POWER__ = false;
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- Scroll Progress Bar -->
@@ -127,8 +189,12 @@
           </p>
           <div class="hero-buttons">
             <a href="#projects" class="btn btn-primary">
-              View Projects 
+              View Projects
               <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="./resume.pdf" download class="btn btn-resume">
+              Download Résumé
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             </a>
             <a href="#contact" class="btn btn-outline">Let's Connect</a>
           </div>
@@ -153,8 +219,25 @@
         <div class="hero-visual">
           <div class="profile-card-glow"></div>
 
+          <!-- Cyberpunk Visual Selector -->
+          <div class="visual-selector font-code">
+            <button class="selector-btn active" data-view="3d">[ 3D MODEL ]</button>
+            <button class="selector-btn" data-view="id">[ PASS CARD ]</button>
+          </div>
+
+          <!-- Spline 3D Model Container -->
+          <div id="hero-3d-container" class="hero-3d-container active">
+            <spline-viewer id="hero-spline-viewer"
+              url="model/NEXBOT_robot_character_concept.splinecode"
+              loading-anim-type="none"></spline-viewer>
+            <div id="hero-3d-loader" class="hero-3d-loader">
+              <div class="spinner"></div>
+              <span>CONNECTING TO SPLINE_MODEL...</span>
+            </div>
+          </div>
+
           <!-- Animated Lanyard ID Card -->
-          <div class="id-lanyard" id="id-lanyard">
+          <div class="id-lanyard" id="id-lanyard" style="display: none;">
             <!-- Lanyard strap -->
             <div class="lanyard-strap">
               <span class="strap-text">PEEYUSH · DEV · PEEYUSH · DEV ·</span>
@@ -544,6 +627,43 @@
       <div class="container">
         <h2 class="section-title reveal-slide"><span class="number">02.</span> Experience</h2>
         <div class="timeline">
+          <!-- Timeline Item: ElevateX Digital -->
+          <div class="timeline-item reveal-fade">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Jul 2026 – Present</div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title-row">
+                  <span class="timeline-logo" aria-label="ElevateX Digital logo">
+                    <svg viewBox="0 0 40 40" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="elevatexGrad" x1="0" y1="0" x2="40" y2="40">
+                          <stop offset="0" stop-color="#00f2fe"/>
+                          <stop offset="1" stop-color="#ff007f"/>
+                        </linearGradient>
+                      </defs>
+                      <rect x="2" y="2" width="36" height="36" rx="11" fill="rgba(0,242,254,0.05)" stroke="url(#elevatexGrad)" stroke-width="2"/>
+                      <path d="M12 28V12H20M12 20H18M12 28H20" stroke="url(#elevatexGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M23 15L29 25M29 15L23 25" stroke="url(#elevatexGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                  <h3>Founder</h3>
+                </div>
+                <span class="company"><a href="#" target="_blank" class="glow-link">ElevateX Digital</a></span>
+              </div>
+              <p class="timeline-summary">ElevateX Digital was founded on the belief that next-generation software development and AI automation shouldn't be overly complex.</p>
+              
+              <button class="expand-btn">Show Details <span>+</span></button>
+              
+              <div class="timeline-details-panel">
+                <ul class="experience-bullets">
+                  <li>Our mission is to build robust, scalable, and secure technologies that allow businesses to operate efficiently, empower their team members, and drive growth in a hyper-connected marketplace.</li>
+                  <li>Whether you require turn-key SaaS subscriptions, bespoke enterprise system integrations, or customized mobile apps, our team of engineers ensures visual excellence, structural robustness, and customer success.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <!-- Timeline Item 1 -->
           <div class="timeline-item reveal-fade">
             <div class="timeline-dot"></div>
@@ -562,6 +682,48 @@
                   <li>Implemented semantic search, intent classification, and opportunity scoring models using Python.</li>
                   <li>Built high-throughput text processing pipelines using embedding vectors and clustering to scale content relevance.</li>
                   <li>Collaborated on automated organic growth features and localization logic to optimize SEO platforms.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Item: ECSoC 2026 -->
+          <div class="timeline-item reveal-fade">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">2026</div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title-row">
+                  <span class="timeline-logo" aria-label="ECSoC logo">
+                    <svg viewBox="0 0 40 40" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="ecsocGrad" x1="0" y1="0" x2="40" y2="40">
+                          <stop offset="0" stop-color="#00f2fe"/>
+                          <stop offset="1" stop-color="#9b5de5"/>
+                        </linearGradient>
+                      </defs>
+                      <rect x="2" y="2" width="36" height="36" rx="11" fill="rgba(0,242,254,0.05)" stroke="url(#ecsocGrad)" stroke-width="2"/>
+                      <path d="M15 14l-5 6 5 6" stroke="url(#ecsocGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M25 14l5 6-5 6" stroke="url(#ecsocGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="20" cy="20" r="2.4" fill="url(#ecsocGrad)"/>
+                    </svg>
+                  </span>
+                  <h3>Open Source Contributor</h3>
+                </div>
+                <span class="company"><a href="https://summerofcode.xyz/id-card/lvw67wm7f" target="_blank" class="glow-link">Elite Coders Summer of Code — ECSoC 2026</a></span>
+              </div>
+              <p class="timeline-summary">Selected contributor for ECSoC 2026, a competitive open-source summer program pairing developers with real-world projects and mentors.</p>
+
+              <div class="timeline-actions">
+                <button class="expand-btn">Show Details <span>+</span></button>
+                <a href="https://summerofcode.xyz/id-card/lvw67wm7f" target="_blank" class="btn btn-live-demo">View Profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg></a>
+              </div>
+
+              <div class="timeline-details-panel">
+                <ul class="experience-bullets">
+                  <li>Contributor ID <strong>lvw67wm7f</strong> — contributing to open-source repositories under structured mentorship.</li>
+                  <li>Resolving real-world issues, submitting pull requests, and collaborating with maintainers via Git and GitHub.</li>
+                  <li>Shipping production-grade features while following code review and open-source best practices.</li>
                 </ul>
               </div>
             </div>

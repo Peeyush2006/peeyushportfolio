@@ -3,6 +3,27 @@
    Typewriter, Filterable Modals, and Scroll Reveals
    ========================================================================== */
 
+// Remote debugging: Display uncaught errors directly on screen
+window.onerror = function(message, source, lineno, colno, error) {
+  const errDiv = document.createElement('div');
+  errDiv.style.position = 'fixed';
+  errDiv.style.top = '0';
+  errDiv.style.left = '0';
+  errDiv.style.width = '100%';
+  errDiv.style.background = 'rgba(255, 0, 0, 0.9)';
+  errDiv.style.color = 'white';
+  errDiv.style.padding = '15px';
+  errDiv.style.zIndex = '99999';
+  errDiv.style.fontFamily = 'monospace';
+  errDiv.style.fontSize = '12px';
+  errDiv.style.maxHeight = '200px';
+  errDiv.style.overflowY = 'auto';
+  errDiv.style.borderBottom = '3px solid darkred';
+  errDiv.innerHTML = `<strong>JS RUNTIME ERROR:</strong> ${message} <br> <small>Location: ${source} (Line ${lineno}, Col ${colno})</small>`;
+  document.body.appendChild(errDiv);
+  return false;
+};
+
 function initPortfolioApp() {
 
   // ==========================================
@@ -86,8 +107,8 @@ function initPortfolioApp() {
     canvas = document.getElementById('neural-canvas');
     if (canvas) {
       ctx = canvas.getContext('2d');
-      let particleCount = window.innerWidth < 768 ? 60 : 115; // Adjust density based on device width
-      const connectionDistance = 130; // Max distance to draw connecting lines
+      let particleCount = window.__LOW_POWER__ ? 12 : (window.innerWidth < 768 ? 35 : 68); // Reduced density to clean up noise
+      const connectionDistance = 115; // Reduced connection distance from 130 to keep it cleaner
 
       // Track cursor locally for particle-to-mouse connections (scoped to this canvas).
       // Start off-screen so no lines draw until the pointer actually moves.
@@ -102,7 +123,7 @@ function initPortfolioApp() {
         if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        particleCount = window.innerWidth < 768 ? 60 : 115;
+        particleCount = window.__LOW_POWER__ ? 12 : (window.innerWidth < 768 ? 35 : 68);
         initParticles();
       }
       
@@ -113,8 +134,8 @@ function initPortfolioApp() {
         constructor(x, y, isTrail = false) {
           this.x = x !== undefined ? x : Math.random() * canvas.width;
           this.y = y !== undefined ? y : Math.random() * canvas.height;
-          this.vx = (Math.random() - 0.5) * (isTrail ? 1.4 : 0.7);
-          this.vy = (Math.random() - 0.5) * (isTrail ? 1.4 : 0.7);
+          this.vx = (Math.random() - 0.5) * (isTrail ? 0.9 : 0.42); // Slightly reduced speed from 1.4 / 0.7
+          this.vy = (Math.random() - 0.5) * (isTrail ? 0.9 : 0.42); // Slightly reduced speed from 1.4 / 0.7
           this.radius = isTrail ? (Math.random() * 3 + 1.5) : (Math.random() * 2.5 + 1.2);
           this.isTrail = isTrail;
           this.life = 1.0;
@@ -183,8 +204,8 @@ function initPortfolioApp() {
             const dist = Math.sqrt(dx * dx + dy * dy);
             
             if (dist < connectionDistance) {
-              // Opacity of connection fades as distance increases
-              const opacity = (1 - dist / connectionDistance) * 0.35;
+              // Opacity of connection fades as distance increases - reduced max opacity to 0.18
+              const opacity = (1 - dist / connectionDistance) * 0.18;
               ctx.beginPath();
               ctx.moveTo(particles[i].x, particles[i].y);
               ctx.lineTo(particles[j].x, particles[j].y);
@@ -199,7 +220,8 @@ function initPortfolioApp() {
           const mDy = particles[i].y - mouseY;
           const mDist = Math.sqrt(mDx * mDx + mDy * mDy);
           if (mDist < connectionDistance + 50) {
-            const mOpacity = (1 - mDist / (connectionDistance + 50)) * 0.45;
+            // Reduced mouse line maximum opacity from 0.45 to 0.22
+            const mOpacity = (1 - mDist / (connectionDistance + 50)) * 0.22;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(mouseX, mouseY);
@@ -279,11 +301,19 @@ function initPortfolioApp() {
       }
 
       function updateLoader() {
+        // Time-based so it always animates 0% -> 100% smoothly on EVERY display,
+        // independent of frame rate / CPU speed.
+        const duration = 2600; // ms for a full 0 -> 100 sweep
+        const startTime = (window.performance && performance.now) ? performance.now() : Date.now();
+
         const interval = setInterval(() => {
           try {
-            // Increase progress smoothly
-            progress += Math.random() * 3.5 + 2.0;
-            
+            const now = (window.performance && performance.now) ? performance.now() : Date.now();
+            const elapsed = now - startTime;
+            // Ease-out curve for a natural "loading" feel
+            const t = Math.min(1, elapsed / duration);
+            progress = Math.round((1 - Math.pow(1 - t, 2)) * 100);
+
             if (progress >= 100) {
               progress = 100;
               loaderProgress.style.width = '100%';
@@ -472,7 +502,10 @@ function initPortfolioApp() {
   
   expandButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const panel = btn.nextElementSibling;
+      let panel = btn.nextElementSibling;
+      if (!panel || !panel.classList.contains('timeline-details-panel')) {
+        panel = btn.closest('.timeline-content').querySelector('.timeline-details-panel');
+      }
       panel.classList.toggle('open');
       
       if (panel.classList.contains('open')) {
@@ -861,6 +894,257 @@ function initPortfolioApp() {
     });
   }
 
+  // ==========================================
+  // 14. Interactive Spline 3D Model (Hero Section)
+  // ==========================================
+  function initHeroSpline() {
+    const viewer = document.getElementById('hero-spline-viewer');
+    const loader = document.getElementById('hero-3d-loader');
+    if (!viewer) return;
+
+    function hideLoader() {
+      if (!loader || loader.style.display === 'none') return;
+      loader.style.opacity = '0';
+      loader.style.transform = 'translateX(-50%) translateY(10px)';
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 500);
+    }
+
+    // Safety timeout - hide loader fast if render complete
+    setTimeout(hideLoader, 2500);
+
+    // Fast check for shadowRoot canvas element to hide loader as soon as WebGL draws
+    const canvasCheckInterval = setInterval(() => {
+      const shadowCanvas = viewer.shadowRoot && viewer.shadowRoot.querySelector('canvas');
+      if (shadowCanvas) {
+        hideLoader();
+        clearInterval(canvasCheckInterval);
+      }
+    }, 50);
+
+    let initialized = false;
+    function setupInteractivity() {
+      if (initialized) return;
+
+      try {
+        const spline = viewer.application || viewer._scene || (typeof viewer.getSplineApp === 'function' ? viewer.getSplineApp() : null);
+        if (!spline) {
+          // Retry ultra fast (50ms) until spline instance is available
+          setTimeout(setupInteractivity, 50);
+          return;
+        }
+
+        initialized = true;
+        hideLoader();
+        clearInterval(canvasCheckInterval);
+
+        // Try to find the head and neck elements in the Nexbot model
+        const head = spline.findObjectByName('Head') || spline.findObjectByName('Head 2') || spline.findObjectByName('HeadM');
+        const neck = spline.findObjectByName('Neck');
+
+        if (!head && !neck) {
+          console.warn('Spline elements for "Head" or "Neck" not found in the loaded scene.');
+          return;
+        }
+
+        // Target rotation values (based on normalized mouse coordinates)
+        let targetX = 0;
+        let targetY = 0;
+
+        // Current rotation values (used for smooth linear interpolation / lerping)
+        let currentX = 0;
+        let currentY = 0;
+
+        // Store original rotations so we apply mouse tracking as offsets
+        const origHeadRotX = head ? head.rotation.x : 0;
+        const origHeadRotY = head ? head.rotation.y : 0;
+        const origNeckRotX = neck ? neck.rotation.x : 0;
+        const origNeckRotY = neck ? neck.rotation.y : 0;
+
+        // Listen for mousemove on document to track cursor globally
+        document.addEventListener('mousemove', (e) => {
+          // Normalize mouse coordinates to range [-0.5, 0.5]
+          const normX = (e.clientX / window.innerWidth) - 0.5;
+          const normY = (e.clientY / window.innerHeight) - 0.5;
+
+          // Max rotation range (in radians, e.g. ~25 degrees for yaw and ~20 degrees for pitch)
+          const maxYaw = 0.45;
+          const maxPitch = 0.35;
+
+          targetY = normX * maxYaw;
+          targetX = normY * maxPitch;
+        });
+
+        // When mouse leaves the window, return to center
+        document.addEventListener('mouseleave', () => {
+          targetX = 0;
+          targetY = 0;
+        });
+
+        // Frame update loop for ultra-smooth movement (lerp)
+        function updateModelRotation() {
+          const lerpFactor = 0.08; // Higher = faster tracking, Lower = smoother tracking
+
+          currentX += (targetX - currentX) * lerpFactor;
+          currentY += (targetY - currentY) * lerpFactor;
+
+          if (head) {
+            head.rotation.y = origHeadRotY + currentY;
+            head.rotation.x = origHeadRotX + currentX;
+          }
+
+          if (neck) {
+            // Neck moves slightly less (40% of head rotation) for anatomical realism
+            neck.rotation.y = origNeckRotY + currentY * 0.4;
+            neck.rotation.x = origNeckRotX + currentX * 0.4;
+          }
+
+          requestAnimationFrame(updateModelRotation);
+        }
+
+        updateModelRotation();
+      } catch (err) {
+        console.error('Failed to configure custom Spline mouse-tracking:', err);
+      }
+    }
+
+    // Bind to both load and load-complete for maximum compatibility
+    viewer.addEventListener('load-complete', setupInteractivity);
+    viewer.addEventListener('load', setupInteractivity);
+
+    // No-op hooks kept so the view toggle below keeps working —
+    // the Spline viewer manages its own render loop
+    window.pauseHero3DAnimation = () => {};
+    window.resumeHero3DAnimation = () => {};
+  }
+
+  // Initialize the Spline 3D model
+  initHeroSpline();
+
+  // 3D View vs ID Card View Toggle selector (with Auto-switching)
+  (function() {
+    const selectorBtns = document.querySelectorAll('.selector-btn');
+    const container3d = document.getElementById('hero-3d-container');
+    const lanyardCard = document.getElementById('id-lanyard');
+    
+    if (!selectorBtns.length) return;
+    
+    let currentActiveView = '3d';
+    let autoSwitchTimer = null;
+    
+    function switchView(view) {
+      if (view === currentActiveView) return;
+      currentActiveView = view;
+      
+      // Update button active state
+      selectorBtns.forEach(btn => {
+        if (btn.getAttribute('data-view') === view) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      if (view === '3d') {
+        // Switch to 3D View
+        if (lanyardCard) {
+          lanyardCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+          lanyardCard.style.opacity = '0';
+          lanyardCard.style.transform = 'translateY(20px) scale(0.95)';
+          setTimeout(() => {
+            lanyardCard.style.display = 'none';
+            if (container3d) {
+              container3d.style.display = 'block';
+              void container3d.offsetWidth; // force reflow
+              container3d.classList.add('active');
+              // Resume rendering loop
+              window.resumeHero3DAnimation && window.resumeHero3DAnimation();
+            }
+          }, 400);
+        } else if (container3d) {
+          container3d.style.display = 'block';
+          void container3d.offsetWidth;
+          container3d.classList.add('active');
+          window.resumeHero3DAnimation && window.resumeHero3DAnimation();
+        }
+      } else {
+        // Switch to ID Card View
+        if (container3d) {
+          container3d.classList.remove('active');
+          setTimeout(() => {
+            container3d.style.display = 'none';
+            // Pause rendering loop to save resources
+            window.pauseHero3DAnimation && window.pauseHero3DAnimation();
+            
+            if (lanyardCard) {
+              lanyardCard.style.display = 'flex';
+              lanyardCard.style.opacity = '0';
+              lanyardCard.style.transform = 'translateY(-50px) scale(0.98)';
+              void lanyardCard.offsetWidth; // force reflow
+              lanyardCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+              lanyardCard.style.opacity = '1';
+              lanyardCard.style.transform = 'translateY(0) scale(1)';
+              
+              // Trigger the card entrance bounce animation
+              lanyardCard.classList.remove('drop-bounce');
+              void lanyardCard.offsetWidth;
+              lanyardCard.classList.add('drop-bounce');
+            }
+          }, 400);
+        }
+      }
+    }
+    
+    // Click listeners
+    selectorBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Stop auto-switching once the user interacts manually
+        if (autoSwitchTimer) {
+          clearInterval(autoSwitchTimer);
+          autoSwitchTimer = null;
+        }
+        
+        const view = btn.getAttribute('data-view');
+        switchView(view);
+      });
+    });
+    
+    // Auto switching loop function
+    function startAutoSwitch() {
+      autoSwitchTimer = setInterval(() => {
+        const nextView = currentActiveView === '3d' ? 'id' : '3d';
+        switchView(nextView);
+      }, 10000); // Swaps every 10 seconds
+    }
+    
+    // Start auto-switching after the boot loader is completed
+    const terminalLoader = document.getElementById('loader');
+    if (terminalLoader) {
+      if (terminalLoader.classList.contains('loaded')) {
+        setTimeout(startAutoSwitch, 2000);
+      } else {
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class' && terminalLoader.classList.contains('loaded')) {
+              setTimeout(startAutoSwitch, 4000); // 4s after loader slides out
+              observer.disconnect();
+            }
+          });
+        });
+        observer.observe(terminalLoader, { attributes: true });
+        
+        // Backup safety timeout
+        setTimeout(() => {
+          if (!autoSwitchTimer) startAutoSwitch();
+          observer.disconnect();
+        }, 8000);
+      }
+    } else {
+      startAutoSwitch();
+    }
+  })();
+
 }
 
 if (document.readyState === 'loading') {
@@ -875,6 +1159,8 @@ if (document.readyState === 'loading') {
 // ==========================================
 
 // Complete Case Study Datastore
+// NOTE: Fill in `live` (deployed demo) and `repo` (GitHub) for each project.
+// Any field left as '' is hidden automatically — no empty buttons will show.
 const projectData = {
   rakshak: {
     tag: 'Web & AI | Self-Initiated',
@@ -886,7 +1172,9 @@ const projectData = {
       'Implemented real-time SOS features with instant sharing of location data.',
       'Independently debugged and resolved deployment pipeline issues related to Zoho Catalyst cloud hosting (handling local pre-build bundle compilation).'
     ],
-    tech: ['React', 'Vite', 'Zoho Catalyst', 'Gen AI APIs', 'Geolocation API', 'CSS Grid/Flexbox']
+    tech: ['React', 'Vite', 'Zoho Catalyst', 'Gen AI APIs', 'Geolocation API', 'CSS Grid/Flexbox'],
+    live: '',
+    repo: ''
   },
   crimeiq: {
     tag: 'Agentic AI | Law Enforcement Tool',
@@ -898,7 +1186,9 @@ const projectData = {
       'Created an analytics dashboard showing geographic crime distributions and hot-spots.',
       'Constructed a working end-to-end prototype to demonstrate AI feasibility in public safety sectors.'
     ],
-    tech: ['Agentic AI', 'Python', 'LLM API Integration', 'Chart.js / D3.js', 'Speech-to-Text', 'SQL']
+    tech: ['Agentic AI', 'Python', 'LLM API Integration', 'Chart.js / D3.js', 'Speech-to-Text', 'SQL'],
+    live: '',
+    repo: ''
   },
   telegrambot: {
     tag: 'Automation & Backend | Self-Initiated',
@@ -910,7 +1200,9 @@ const projectData = {
       'Implemented API fallback redundancy logic: automatically switches to Groq API when Gemini API quotas are exhausted, preventing service interruption.',
       'Configured webhooks and cron schedules to achieve 100% automated pipelines with zero manual overhead.'
     ],
-    tech: ['n8n', 'Gemini API', 'Groq API', 'Telegram Bot API', 'JSON Parsing', 'Cron Jobs']
+    tech: ['n8n', 'Gemini API', 'Groq API', 'Telegram Bot API', 'JSON Parsing', 'Cron Jobs'],
+    live: '',
+    repo: ''
   },
   campusapp: {
     tag: 'Android App | Academic Project',
@@ -922,7 +1214,9 @@ const projectData = {
       'Features include: Emergency contacts directory, interactive campus map locator, live events announcement board, Lost & Found hub, and instant push notifications.',
       'Implemented Material Design 3 guidelines for an interactive, fluid, and highly accessible user experience.'
     ],
-    tech: ['Kotlin', 'Android Studio', 'MVVM Architecture', 'Firebase SDK', 'Material Design 3', 'Google Maps API']
+    tech: ['Kotlin', 'Android Studio', 'MVVM Architecture', 'Firebase SDK', 'Material Design 3', 'Google Maps API'],
+    live: '',
+    repo: ''
   },
   geldium: {
     tag: 'Agentic AI | Collections Analytics',
@@ -934,7 +1228,9 @@ const projectData = {
       'Designed system parameters to align with strict regulatory compliance rules (including ECOA and FDCPA standards).',
       'Developed dashboards to translate model explanations into actionable steps for non-technical stakeholders.'
     ],
-    tech: ['Python', 'Gradient Boosting', 'SHAP Explainability', 'Pandas / NumPy', 'Scikit-learn', 'Risk Modeling']
+    tech: ['Python', 'Gradient Boosting', 'SHAP Explainability', 'Pandas / NumPy', 'Scikit-learn', 'Risk Modeling'],
+    live: '',
+    repo: ''
   }
 };
 
@@ -951,21 +1247,32 @@ function openProjectModal(projectId) {
   // Generate HTML content dynamically
   let bulletsHTML = data.bullets.map(b => `<li>${b}</li>`).join('');
   let techHTML = data.tech.map(t => `<span>${t}</span>`).join('');
-  
+
+  // Build action links only for URLs that actually exist (skips empty ones)
+  const linkDefs = [
+    { url: data.repo, label: 'View Code', icon: '<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>' }
+  ];
+  const linksHTML = linkDefs
+    .filter(l => l.url)
+    .map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="modal-link-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${l.icon}</svg>${l.label}</a>`)
+    .join('');
+  const linksBlock = linksHTML ? `<div class="modal-links">${linksHTML}</div>` : '';
+
   placeholder.innerHTML = `
     <span class="modal-project-tag">${data.tag}</span>
     <h3 class="modal-project-title">${data.title}</h3>
     <p class="modal-project-desc">${data.desc}</p>
-    
+
     <h4 class="modal-section-title">Key Contributions & Features</h4>
     <ul class="modal-bullets">
       ${bulletsHTML}
     </ul>
-    
+
     <h4 class="modal-section-title">Technologies Used</h4>
     <div class="modal-tech-list">
       ${techHTML}
     </div>
+    ${linksBlock}
   `;
   
   modal.classList.add('open');
@@ -1079,8 +1386,10 @@ function handleContactSubmit(e) {
 (function() {
   // Graceful exit if Three.js is not loaded
   if (typeof THREE === 'undefined') return;
+  // Skip this WebGL scene entirely on mobile/responsive screens (screen width <= 768px)
+  if (window.innerWidth <= 768) return;
 
-  window.addEventListener('load', () => {
+  const initCerts = () => {
     const canvas3d = document.getElementById('canvas-3d-certs');
     if (!canvas3d) return;
 
@@ -1656,7 +1965,8 @@ function handleContactSubmit(e) {
 
       renderer.setSize(width, height);
     });
-  });
+  };
+  initCerts();
 })();
 
 
@@ -1665,8 +1975,10 @@ function handleContactSubmit(e) {
 // ==========================================
 (function() {
   if (typeof THREE === 'undefined') return;
+  // Skip this WebGL scene entirely on mobile/responsive screens (screen width <= 768px)
+  if (window.innerWidth <= 768) return;
 
-  window.addEventListener('load', () => {
+  const initN8n = () => {
     const canvasN8n = document.getElementById('canvas-3d-n8n');
     if (!canvasN8n) return;
 
@@ -2008,7 +2320,8 @@ function handleContactSubmit(e) {
 
       renderer.setSize(width, height);
     });
-  });
+  };
+  initN8n();
 })();
 
 
@@ -2020,7 +2333,7 @@ function handleContactSubmit(e) {
   // Graceful exit if Three.js failed to load
   if (typeof THREE === 'undefined') return;
 
-  window.addEventListener('load', () => {
+  const initGeoBackground = () => {
     try {
       const canvas = document.getElementById('geo-canvas');
       if (!canvas) return;
@@ -2083,13 +2396,13 @@ function handleContactSubmit(e) {
       layout.forEach((cfg, i) => {
         const base = geoFactories[cfg.type]();
 
-        // Crisp polygon edges via wireframe geometry
+        // Crisp polygon edges via wireframe geometry - reduced opacity to lower noise
         const wire = new THREE.LineSegments(
           new THREE.WireframeGeometry(base),
           new THREE.LineBasicMaterial({
             color: cfg.color,
             transparent: true,
-            opacity: cfg.color === ACCENT ? 0.28 : 0.42,
+            opacity: cfg.color === ACCENT ? 0.16 : 0.25, // Reduced from 0.28 / 0.42
           })
         );
 
@@ -2099,7 +2412,7 @@ function handleContactSubmit(e) {
           new THREE.MeshBasicMaterial({
             color: cfg.color,
             transparent: true,
-            opacity: 0.035,
+            opacity: 0.015, // Reduced from 0.035
             depthWrite: false,
           })
         );
@@ -2111,12 +2424,12 @@ function handleContactSubmit(e) {
         mesh.scale.setScalar(cfg.scale);
         mesh.rotation.set(i * 0.7, i * 1.3, 0);
 
-        // Deterministic per-shape slow spin (varied direction/speed)
+        // Deterministic per-shape slow spin (varied direction/speed) - slowed down by 40%
         const dir = i % 2 === 0 ? 1 : -1;
         mesh.userData.spin = {
-          x: dir * (0.0006 + (i % 3) * 0.00035),
-          y: dir * (0.0011 + (i % 4) * 0.0003),
-          z: (i % 2) * 0.0004,
+          x: dir * (0.00036 + (i % 3) * 0.00021),
+          y: dir * (0.00066 + (i % 4) * 0.00018),
+          z: (i % 2) * 0.00024,
         };
 
         group.add(mesh);
@@ -2124,7 +2437,34 @@ function handleContactSubmit(e) {
       });
       scene.add(group);
 
-      // 6. Mouse parallax (whole scene gently follows the cursor)
+      // 5.5. Build Starfield (Twinkling space dust background) - reduced density
+      const starsGeometry = new THREE.BufferGeometry();
+      const starsCount = 180; // Reduced from 400
+      const starPositions = new Float32Array(starsCount * 3);
+
+      for (let i = 0; i < starsCount * 3; i += 3) {
+        starPositions[i] = (Math.random() - 0.5) * 45;     // X
+        starPositions[i + 1] = (Math.random() - 0.5) * 45; // Y
+        starPositions[i + 2] = (Math.random() - 0.5) * 20 - 10; // Z
+      }
+
+      starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+
+      // Crisp tiny stars material (using pixel-based sizing for high visibility) - reduced size and opacity
+      const starsMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 1.4, // Reduced from 2.2
+        sizeAttenuation: false,
+        transparent: true,
+        opacity: 0.45, // Reduced from 0.85
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      const starfield = new THREE.Points(starsGeometry, starsMaterial);
+      group.add(starfield); // Add to group to inherit parallax!
+
+      // 6. Mouse parallax (whole scene gently follows the cursor) - slightly reduced movement
       const mouse = { x: 0, y: 0 };
       const target = { x: 0, y: 0 };
       if (!prefersReduced) {
@@ -2145,13 +2485,13 @@ function handleContactSubmit(e) {
       // 7. Animate
       let rafId = null;
       function renderFrame() {
-        // Ease scene parallax toward the cursor
+        // Ease scene parallax toward the cursor - slightly reduced parallax movement factors
         mouse.x += (target.x - mouse.x) * 0.04;
         mouse.y += (target.y - mouse.y) * 0.04;
-        group.rotation.y = mouse.x * 0.28;
-        group.rotation.x = mouse.y * 0.18;
-        camera.position.x = mouse.x * 0.8;
-        camera.position.y = -mouse.y * 0.6;
+        group.rotation.y = mouse.x * 0.20; // Reduced from 0.28
+        group.rotation.x = mouse.y * 0.12; // Reduced from 0.18
+        camera.position.x = mouse.x * 0.5; // Reduced from 0.8
+        camera.position.y = -mouse.y * 0.4; // Reduced from 0.6
         camera.lookAt(scene.position);
 
         // Per-shape self rotation
@@ -2160,6 +2500,13 @@ function handleContactSubmit(e) {
           s.rotation.x += sp.x;
           s.rotation.y += sp.y;
           s.rotation.z += sp.z;
+        }
+
+        // Slow starfield rotation & organic twinkling pulse - slowed down and opacity range reduced
+        if (starfield) {
+          starfield.rotation.z += 0.00015; // Slowed down from 0.0003
+          starfield.rotation.y += 0.00005; // Slowed down from 0.0001
+          starfield.material.opacity = 0.15 + Math.sin(performance.now() * 0.001) * 0.08; // Twinkling range 0.07 to 0.23 (reduced from 0.12 to 0.48)
         }
 
         renderer.render(scene, camera);
@@ -2198,5 +2545,6 @@ function handleContactSubmit(e) {
     } catch (err) {
       console.error('3D geometry background initialization error:', err);
     }
-  });
+  };
+  initGeoBackground();
 })();
