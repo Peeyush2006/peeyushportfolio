@@ -99,149 +99,262 @@ function initPortfolioApp() {
 
 
   // ==========================================
-  // 2. Interactive Neural Particle Canvas (Null-Safe)
+  // 2. Interactive Starfield Canvas (Clean Cosmic Sky - No Line Web)
   // ==========================================
   let particles = [];
+  let shootingStars = [];
   let canvas, ctx;
   try {
     canvas = document.getElementById('neural-canvas');
     if (canvas) {
       ctx = canvas.getContext('2d');
-      let particleCount = window.__LOW_POWER__ ? 12 : (window.innerWidth < 768 ? 35 : 68); // Reduced density to clean up noise
-      const connectionDistance = 115; // Reduced connection distance from 130 to keep it cleaner
+      let starCount = window.__LOW_POWER__ ? 60 : (window.innerWidth < 768 ? 120 : 260);
 
-      // Track cursor locally for particle-to-mouse connections (scoped to this canvas).
-      // Start off-screen so no lines draw until the pointer actually moves.
+      // Track cursor position for subtle star proximity glow aura
       let mouseX = -1000, mouseY = -1000;
       window.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
       }, { passive: true });
 
-      // Track window size and adjust canvas dims
+      // Handle canvas resize
       function resizeCanvas() {
         if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        particleCount = window.__LOW_POWER__ ? 12 : (window.innerWidth < 768 ? 35 : 68);
-        initParticles();
+        starCount = window.__LOW_POWER__ ? 60 : (window.innerWidth < 768 ? 120 : 260);
+        initStars();
       }
-      
       window.addEventListener('resize', resizeCanvas);
-      
-      // Particle constructor
+
+      // Star & Stardust Particle Class
       window.Particle = class Particle {
         constructor(x, y, isTrail = false) {
           this.x = x !== undefined ? x : Math.random() * canvas.width;
           this.y = y !== undefined ? y : Math.random() * canvas.height;
-          this.vx = (Math.random() - 0.5) * (isTrail ? 0.9 : 0.42); // Slightly reduced speed from 1.4 / 0.7
-          this.vy = (Math.random() - 0.5) * (isTrail ? 0.9 : 0.42); // Slightly reduced speed from 1.4 / 0.7
-          this.radius = isTrail ? (Math.random() * 3 + 1.5) : (Math.random() * 2.5 + 1.2);
           this.isTrail = isTrail;
-          this.life = 1.0;
-          this.decay = 0.015 + Math.random() * 0.012; // fade speed
-          this.color = isTrail ? (Math.random() > 0.5 ? 'rgba(155, 93, 229,' : 'rgba(0, 242, 254,') : 'rgba(0, 242, 254,';
-        }
-        
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          
-          if (this.isTrail) {
-            this.life -= this.decay;
-            this.radius = Math.max(0.1, this.radius - 0.03);
-          } else if (canvas) {
-            // Bounce off borders
-            if (this.x < 0 || this.x > canvas.width) this.vx = -this.vx;
-            if (this.y < 0 || this.y > canvas.height) this.vy = -this.vy;
+
+          if (isTrail) {
+            this.vx = (Math.random() - 0.5) * 0.8;
+            this.vy = (Math.random() - 0.5) * 0.8;
+            this.radius = Math.random() * 2.2 + 0.8;
+            this.life = 1.0;
+            this.decay = 0.02 + Math.random() * 0.02;
+            const colors = ['rgba(0, 242, 254,', 'rgba(155, 93, 229,', 'rgba(255, 255, 255,'];
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+          } else {
+            // Permanent background & twinkling stars
+            this.vx = (Math.random() - 0.5) * 0.12; // Slow peaceful drift
+            this.vy = (Math.random() - 0.5) * 0.12;
+            this.radius = Math.random() < 0.82 ? (Math.random() * 1.3 + 0.5) : (Math.random() * 1.6 + 1.8);
+            this.baseAlpha = Math.random() * 0.6 + 0.25;
+            this.alpha = this.baseAlpha;
+            this.twinkleSpeed = 0.008 + Math.random() * 0.025;
+            this.twinklePhase = Math.random() * Math.PI * 2;
+            this.isSparkle = this.radius > 2.0 && Math.random() < 0.45; // Key stars get 4-point cross lens flare
+            
+            // Rich celestial color palette
+            const palette = [
+              'rgba(255, 255, 255,',  // Diamond White
+              'rgba(0, 242, 254,',    // Electric Cyan
+              'rgba(155, 93, 229,',   // Deep Violet
+              'rgba(0, 102, 255,',    // Cosmic Blue
+              'rgba(255, 225, 180,'   // Golden Starlight
+            ];
+            this.color = palette[Math.floor(Math.random() * palette.length)];
           }
         }
-        
+
+        update() {
+          if (this.isTrail) {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+            this.radius = Math.max(0.1, this.radius - 0.02);
+          } else {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Wrap around screen boundaries smoothly
+            if (canvas) {
+              if (this.x < 0) this.x = canvas.width;
+              if (this.x > canvas.width) this.x = 0;
+              if (this.y < 0) this.y = canvas.height;
+              if (this.y > canvas.height) this.y = 0;
+            }
+
+            // Twinkle effect (sinusoidal pulse)
+            this.twinklePhase += this.twinkleSpeed;
+            const twinkle = Math.sin(this.twinklePhase) * 0.32;
+            
+            // Cursor proximity glow (illuminates stars near the mouse without lines)
+            let hoverBoost = 0;
+            if (mouseX > 0 && mouseY > 0) {
+              const dx = this.x - mouseX;
+              const dy = this.y - mouseY;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 110) {
+                hoverBoost = (1 - dist / 110) * 0.45;
+              }
+            }
+
+            this.alpha = Math.min(1.0, Math.max(0.15, this.baseAlpha + twinkle + hoverBoost));
+          }
+        }
+
         draw() {
-          if (!ctx || (this.isTrail && this.life <= 0)) return;
+          if (!ctx) return;
+          if (this.isTrail) {
+            if (this.life <= 0) return;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `${this.color} ${this.life * 0.85})`;
+            ctx.fill();
+            return;
+          }
+
+          // Core star point
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          if (this.isTrail) {
-            ctx.fillStyle = `${this.color} ${this.life * 0.65})`;
-          } else {
-            ctx.fillStyle = 'rgba(0, 242, 254, 0.45)'; // Electric Teal glow
-          }
+          ctx.fillStyle = `${this.color} ${this.alpha})`;
           ctx.fill();
+
+          // Soft star aura glow for larger / bright stars
+          if (this.radius > 1.3 && this.alpha > 0.4) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius * 2.6, 0, Math.PI * 2);
+            ctx.fillStyle = `${this.color} ${this.alpha * 0.16})`;
+            ctx.fill();
+          }
+
+          // 4-point Lens Flare / Cross Sparkle for key bright stars
+          if (this.isSparkle && this.alpha > 0.45) {
+            const flareLen = this.radius * 3.6 * this.alpha;
+            ctx.save();
+            ctx.strokeStyle = `${this.color} ${this.alpha * 0.7})`;
+            ctx.lineWidth = 0.75;
+            ctx.beginPath();
+            ctx.moveTo(this.x - flareLen, this.y);
+            ctx.lineTo(this.x + flareLen, this.y);
+            ctx.moveTo(this.x, this.y - flareLen);
+            ctx.lineTo(this.x, this.y + flareLen);
+            ctx.stroke();
+            ctx.restore();
+          }
         }
       };
-      
-      function initParticles() {
+
+      // Shooting Star (Comet) Class
+      class ShootingStar {
+        constructor() {
+          this.reset();
+        }
+
+        reset() {
+          this.x = Math.random() * canvas.width * 0.85 + canvas.width * 0.05;
+          this.y = Math.random() * canvas.height * 0.4;
+          this.length = Math.random() * 85 + 75;
+          this.speed = Math.random() * 5.5 + 6.5;
+          this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.2;
+          this.dx = Math.cos(this.angle) * this.speed;
+          this.dy = Math.sin(this.angle) * this.speed;
+          this.opacity = 1.0;
+          this.active = true;
+        }
+
+        update() {
+          if (!this.active) return;
+          this.x += this.dx;
+          this.y += this.dy;
+          this.opacity -= 0.014;
+
+          if (this.opacity <= 0 || this.x > canvas.width || this.y > canvas.height) {
+            this.active = false;
+          }
+        }
+
+        draw() {
+          if (!this.active || !ctx) return;
+          const tailX = this.x - Math.cos(this.angle) * this.length;
+          const tailY = this.y - Math.sin(this.angle) * this.length;
+
+          const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+          grad.addColorStop(0, `rgba(255, 255, 255, ${this.opacity * 0.95})`);
+          grad.addColorStop(0.25, `rgba(0, 242, 254, ${this.opacity * 0.65})`);
+          grad.addColorStop(1, 'rgba(0, 242, 254, 0)');
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Bright star head
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function initStars() {
         particles = [];
-        for (let i = 0; i < particleCount; i++) {
+        shootingStars = [];
+        for (let i = 0; i < starCount; i++) {
           particles.push(new window.Particle());
         }
       }
-      
-      function animateParticles() {
+
+      // Periodically spawn a shooting star
+      let lastShootingStar = 0;
+      function spawnShootingStar() {
+        const now = Date.now();
+        if (now - lastShootingStar > (Math.random() * 5000 + 4500) && shootingStars.length < 2) {
+          shootingStars.push(new ShootingStar());
+          lastShootingStar = now;
+        }
+      }
+
+      function animateStars() {
         if (!canvas || !ctx) return;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           return;
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         // Filter out dead trail particles
         particles = particles.filter(p => !p.isTrail || p.life > 0);
-        
-        // Draw connections and update particles
+
+        // Render stars
         for (let i = 0; i < particles.length; i++) {
           particles[i].update();
           particles[i].draw();
-          
-          // Skip connection lines for trail particles to keep it clean
-          if (particles[i].isTrail) continue;
-          
-          // Look forward to connect particles
-          for (let j = i + 1; j < particles.length; j++) {
-            if (particles[j].isTrail) continue;
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < connectionDistance) {
-              // Opacity of connection fades as distance increases - reduced max opacity to 0.18
-              const opacity = (1 - dist / connectionDistance) * 0.18;
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(0, 242, 254, ${opacity})`;
-              ctx.lineWidth = 1.0;
-              ctx.stroke();
-            }
-          }
-          
-          // Connect to mouse if close enough
-          const mDx = particles[i].x - mouseX;
-          const mDy = particles[i].y - mouseY;
-          const mDist = Math.sqrt(mDx * mDx + mDy * mDy);
-          if (mDist < connectionDistance + 50) {
-            // Reduced mouse line maximum opacity from 0.45 to 0.22
-            const mOpacity = (1 - mDist / (connectionDistance + 50)) * 0.22;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(mouseX, mouseY);
-            ctx.strokeStyle = `rgba(155, 93, 229, ${mOpacity})`; // Secondary Purple transition
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
+        }
+
+        // Render shooting stars
+        if (!window.__LOW_POWER__) {
+          spawnShootingStar();
+          shootingStars = shootingStars.filter(s => s.active);
+          for (let s of shootingStars) {
+            s.update();
+            s.draw();
           }
         }
-        
-        requestAnimationFrame(animateParticles);
+
+        requestAnimationFrame(animateStars);
       }
-      
-      // Set dimensions and initialize
+
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      initParticles();
-      animateParticles();
+      initStars();
+      animateStars();
     }
   } catch (err) {
-    console.error('Neural canvas initialization error:', err);
+    console.error('Starfield canvas initialization error:', err);
   }
 
 
@@ -2396,13 +2509,13 @@ function handleContactSubmit(e) {
       layout.forEach((cfg, i) => {
         const base = geoFactories[cfg.type]();
 
-        // Crisp polygon edges via wireframe geometry - reduced opacity to lower noise
+        // Very faint ethereal polygon edges to minimize background line clutter
         const wire = new THREE.LineSegments(
           new THREE.WireframeGeometry(base),
           new THREE.LineBasicMaterial({
             color: cfg.color,
             transparent: true,
-            opacity: cfg.color === ACCENT ? 0.16 : 0.25, // Reduced from 0.28 / 0.42
+            opacity: cfg.color === ACCENT ? 0.05 : 0.07, // Ultra-faint ambient wireframes
           })
         );
 
@@ -2412,7 +2525,7 @@ function handleContactSubmit(e) {
           new THREE.MeshBasicMaterial({
             color: cfg.color,
             transparent: true,
-            opacity: 0.015, // Reduced from 0.035
+            opacity: 0.012,
             depthWrite: false,
           })
         );
@@ -2437,26 +2550,26 @@ function handleContactSubmit(e) {
       });
       scene.add(group);
 
-      // 5.5. Build Starfield (Twinkling space dust background) - reduced density
+      // 5.5. Build 3D Deep Space Starfield
       const starsGeometry = new THREE.BufferGeometry();
-      const starsCount = 180; // Reduced from 400
+      const starsCount = 350; // Rich 3D star field
       const starPositions = new Float32Array(starsCount * 3);
 
       for (let i = 0; i < starsCount * 3; i += 3) {
-        starPositions[i] = (Math.random() - 0.5) * 45;     // X
-        starPositions[i + 1] = (Math.random() - 0.5) * 45; // Y
-        starPositions[i + 2] = (Math.random() - 0.5) * 20 - 10; // Z
+        starPositions[i] = (Math.random() - 0.5) * 50;     // X
+        starPositions[i + 1] = (Math.random() - 0.5) * 50; // Y
+        starPositions[i + 2] = (Math.random() - 0.5) * 24 - 12; // Z
       }
 
       starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
 
-      // Crisp tiny stars material (using pixel-based sizing for high visibility) - reduced size and opacity
+      // Crisp tiny stars material
       const starsMaterial = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 1.4, // Reduced from 2.2
+        size: 1.5,
         sizeAttenuation: false,
         transparent: true,
-        opacity: 0.45, // Reduced from 0.85
+        opacity: 0.65,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       });
