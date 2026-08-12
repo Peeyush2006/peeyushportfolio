@@ -108,7 +108,7 @@ function initPortfolioApp() {
     canvas = document.getElementById('neural-canvas');
     if (canvas) {
       ctx = canvas.getContext('2d');
-      let starCount = window.__LOW_POWER__ ? 60 : (window.innerWidth < 768 ? 120 : 260);
+      let starCount = window.__LOW_POWER__ ? 20 : (window.innerWidth < 768 ? 40 : 80); // Reduced density for clean, subtle starscape
 
       // Track cursor position for subtle star proximity glow aura
       let mouseX = -1000, mouseY = -1000;
@@ -122,7 +122,7 @@ function initPortfolioApp() {
         if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        starCount = window.__LOW_POWER__ ? 60 : (window.innerWidth < 768 ? 120 : 260);
+        starCount = window.__LOW_POWER__ ? 20 : (window.innerWidth < 768 ? 40 : 80);
         initStars();
       }
       window.addEventListener('resize', resizeCanvas);
@@ -312,7 +312,7 @@ function initPortfolioApp() {
       let lastShootingStar = 0;
       function spawnShootingStar() {
         const now = Date.now();
-        if (now - lastShootingStar > (Math.random() * 5000 + 4500) && shootingStars.length < 2) {
+        if (now - lastShootingStar > (Math.random() * 8000 + 7000) && shootingStars.length < 1) {
           shootingStars.push(new ShootingStar());
           lastShootingStar = now;
         }
@@ -2550,9 +2550,9 @@ function handleContactSubmit(e) {
       });
       scene.add(group);
 
-      // 5.5. Build 3D Deep Space Starfield
+      // 5.5. Build 3D Deep Space Starfield - subtle background dust
       const starsGeometry = new THREE.BufferGeometry();
-      const starsCount = 350; // Rich 3D star field
+      const starsCount = 60; // Clean, sparse 3D star points
       const starPositions = new Float32Array(starsCount * 3);
 
       for (let i = 0; i < starsCount * 3; i += 3) {
