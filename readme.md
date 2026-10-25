@@ -1,91 +1,78 @@
-# Peeyush Tiwari — Developer Portfolio
+# Peeyush Tiwari — Developer OS Portfolio
 
-A fast, animated, single-page portfolio for **Peeyush Tiwari** — AI Engineer, Python Developer, and Android Developer. Built from scratch with a vanilla web stack (no framework, no build step) and a heavy focus on interactive, "developer-OS" styled UI.
+A modern, animated, component-based developer portfolio for **Peeyush Tiwari** — AI Engineer, Python Developer, and Android Builder. Designed with a sleek macOS & developer OS aesthetic matching the reference UI at [arun-g.vercel.app](https://arun-g.vercel.app/), customized with Peeyush Tiwari's projects, experience, skills, and certifications.
 
-🔗 **Live site:** [portfoliopeeyush.netlify.app](https://portfoliopeeyush.netlify.app/)
-
----
-
-## ✨ Features
-
-- **Terminal boot loader** — an animated boot-sequence intro that sets the "developer OS" theme.
-- **Layered animated background:**
-  - A full-page **3D rotating wireframe geometry** field rendered with WebGL / Three.js (icosahedra, dodecahedra, octahedra, torus & torus-knot) with depth fog and mouse parallax.
-  - An interactive **2D neural particle canvas** that connects points to the cursor.
-  - Ambient **aurora glow orbs** and an animated **cyber grid** overlay.
-- **Interactive 3D certification balls** — Three.js spheres textured with company logos, draggable and mouse-reactive.
-- **Interactive developer ID card** with a synchronized drop-in animation and 3D tilt.
-- **Custom cursor** with an easing trail.
-- **Filterable project gallery** (AI & ML / Android / Web App / Automation).
-- **Working contact form** powered by [Netlify Forms](https://docs.netlify.com/forms/setup/) — with a spam honeypot and a graceful fallback.
-- **Responsive** layout with reduced-motion and mobile performance considerations.
-- **SEO & social-ready** — Open Graph, Twitter Card, favicon, canonical, and theme-color meta tags.
+🔗 **Live Portfolio:** [portfoliopeeyush.netlify.app](https://portfoliopeeyush.netlify.app/)
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Features & Architecture
 
-| Area | Technology |
-|------|------------|
-| Markup / Styling | HTML5, CSS3 (custom properties, animations) |
-| Scripting | Vanilla JavaScript (ES6+) |
-| 3D / Graphics | [Three.js](https://threejs.org/) r128, Canvas 2D API |
-| Fonts | Outfit & JetBrains Mono (Google Fonts) |
-| Forms | Netlify Forms |
-| Hosting / CI | Netlify (auto-deploy from `main`) |
-
-No bundler, package manager, or build step — the site runs directly from static files.
+- **OS Boot Sequence** — Realistic terminal boot sequence with OS detection (Windows Command Prompt, macOS zsh, Linux bash), typed commands, ASCII banner, progress bar, system specs, and smooth transition into the desktop environment.
+- **macOS Window Experience** — Traffic-light window header dots (close/minimize/expand), animated section breadcrumbs, and real-time scroll progress indicators.
+- **Dynamic Gliding Sidebar Navigation** — Sidebar featuring profile photo with gradient ring, live role ticker with flashing cursor, and an animated paper-plane gliding indicator with gradient vapor trail.
+- **Flagship Project Gallery** — Interactive 3D tilt cards with boot-log hover previews, status badges (`active`, `shipped`), GitHub links, live demo links, and deep-dive modals:
+  - **Rakshak AI** — Emergency Response & AI Web App (React, Vite, Zoho Catalyst, Gen AI)
+  - **CrimeIQ** — Bilingual Agentic AI Law Enforcement Platform (Python, LLM APIs, Data Viz)
+  - **AI Lesson Bot** — Autonomous Curriculum Delivery Telegram Bot (n8n, Gemini, Groq)
+  - **Campus Directory** — Native Kotlin Android App (MVVM, Material Design 3, Firebase)
+  - **Geldium** — Explainable AI Collections Workflow (Gradient Boosting, SHAP)
+  - **Developer OS Portfolio** — React, Tailwind CSS, Framer Motion
+- **Interactive Playground** — Step-by-step Algorithm runner, Systems Architecture visualizer, Applied AI pipeline explainer, in-browser SQL playground, Tech Stack inspector, and interactive mini-experiments.
+- **About Storybook** — Interactive multi-slide presentation with spring physics, animated character avatars, and career milestones.
+- **Skills & Toolbox** — Categorized folder structure (Languages, AI & ML, Frontend, Android, DevOps & Cloud, Databases & Tools) with experience years, project tags, and animated preview cards.
+- **Experience Highlights**:
+  - **AWS Student Builder Leader** at **Amazon Web Services (AWS)** (2026 – Present) — spearheading campus cloud workshops, serverless computing labs, and student developer community building.
+  - **Founder & Lead Developer** at **ElevateX Digital** (Jul 2026 – Present) — delivering turnkey SaaS platforms, enterprise AI integrations, and native mobile apps.
+  - **AI/ML Intern** at **FlyRank** (Jul 2026 – Aug 2026) — production semantic search, intent classification, and text processing pipelines in Python.
+  - **Open Source Contributor** at **Elite Coders Summer of Code (ECSoC 2026)** — active contributor to competitive open-source repositories under mentorship.
+- **Jarvis AI Portfolio Assistant** — Conversational AI assistant grounded in Peeyush's portfolio, with suggested prompts, streaming responses, and real-time chat.
+- **Interactive CRT Monitor & Lighting Keyboard** — In the Contact view, type directly into a virtual CRT monitor and watch a mechanical keyboard light up key-by-key in real-time as you type, with terminal submission action (`sendToPeeyush(form)`).
+- **Easter Eggs & Delights** — Toast alerts ("Welcome! ☕" / "Have a great day! 👋"), document title toggling on window blur ("Come back?👋"), and hidden terminal cheat codes (`sudo hire peeyush`).
 
 ---
 
 ## 📁 Project Structure
 
 ```
-portfolio-peeyush/
-├── index.html      # Page markup, meta tags, and section content
-├── style.css       # All styling, animations, and responsive rules
-├── script.js       # Interactivity: loader, canvases, Three.js scenes, form, cursor
-├── profile.jpg     # Profile photo (also used as the social share image)
+peeyush-portfolio/
+├── index.html          # Main HTML entry point, SEO, Open Graph & meta tags
+├── assets/
+│   ├── index.css       # Complete Tailwind & component stylesheet
+│   └── index.js        # Bundled application logic, React & Framer Motion
+├── images/             # All local image assets, badges, preview gifs, and icons
+│   ├── me.jpg          # Peeyush's profile photo
+│   ├── profile.jpg     # Social sharing & favicon image
+│   └── Peeyush Tiwari - ( Resume ).pdf # Peeyush's resume
+├── profile.jpg         # Root profile picture
+├── resume.pdf          # Root resume document
+├── run_server.bat      # 1-click local launch script for Windows
+├── _backup/            # Safe backup of previous site version
 └── README.md
 ```
 
 ---
 
-## 🚀 Getting Started (Local Development)
+## 🚀 Running Locally
 
-Because it's a static site, you only need a simple local server to preview it.
+Because this is a static web application, you can serve it with any local web server:
 
+### Option 1: 1-Click Launch (Windows)
+Double-click `run_server.bat` in the project root. It will automatically detect an available port and open your default browser.
+
+### Option 2: Python HTTP Server
 ```bash
-# Clone the repository
-git clone https://github.com/Peeyush2006/portfolio-peeyush.git
-cd portfolio-peeyush
-
-# Serve it locally (any static server works). For example, with Python:
 python -m http.server 8000
 ```
-
-Then open <http://localhost:8000> in your browser.
-
-> **Note:** The contact form uses **Netlify Forms**, which only processes submissions on the deployed Netlify site — locally, submitting the form will hit the graceful fallback message. Everything else works fully offline.
-
----
-
-## 🌐 Deployment
-
-The site is hosted on **Netlify** and deploys automatically:
-
-1. Push to the `main` branch.
-2. Netlify rebuilds and publishes within a minute or two.
-3. Form submissions appear under **Netlify dashboard → Forms**. To receive them by email, add a notification under **Forms → Settings & notifications**.
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
 
 ---
 
 ## 📬 Contact
 
 - **Email:** peeyushtiwari03@gmail.com
+- **Phone:** +91 9202261369
 - **GitHub:** [@Peeyush2006](https://github.com/Peeyush2006)
+- **LinkedIn:** [peeyushtiwari18](https://linkedin.com/in/peeyushtiwari18)
+- **Twitter/X:** [@Peeyush69537028](https://x.com/Peeyush69537028)
 - **Portfolio:** [portfoliopeeyush.netlify.app](https://portfoliopeeyush.netlify.app/)
-
----
-
-<p align="center">Built with passion and a vanilla web stack. © 2026 Peeyush Tiwari.</p>
