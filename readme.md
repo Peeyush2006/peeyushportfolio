@@ -12,19 +12,17 @@ A modern, animated, component-based developer portfolio for **Peeyush Tiwari** �
 - **macOS Window Experience** — Traffic-light window header dots (close/minimize/expand), animated section breadcrumbs, and real-time scroll progress indicators.
 - **Dynamic Gliding Sidebar Navigation** — Sidebar featuring profile photo with gradient ring, live role ticker with flashing cursor, and an animated paper-plane gliding indicator with gradient vapor trail.
 - **Flagship Project Gallery** — Interactive 3D tilt cards with boot-log hover previews, status badges (`active`, `shipped`), GitHub links, live demo links, and deep-dive modals:
-  - **Rakshak AI** — Emergency Response & AI Web App (React, Vite, Zoho Catalyst, Gen AI)
-  - **CrimeIQ** — Bilingual Agentic AI Law Enforcement Platform (Python, LLM APIs, Data Viz)
-  - **AI Lesson Bot** — Autonomous Curriculum Delivery Telegram Bot (n8n, Gemini, Groq)
-  - **Campus Directory** — Native Kotlin Android App (MVVM, Material Design 3, Firebase)
-  - **Geldium** — Explainable AI Collections Workflow (Gradient Boosting, SHAP)
-  - **Developer OS Portfolio** — React, Tailwind CSS, Framer Motion
+  - **Rakshak AI** — Bilingual AI Cop & Karnataka Police Crime Intelligence Platform (React, Agentic AI, Graph Analysis, FastAPI)
+  - **AI Lesson Bot** — Autonomous Curriculum Delivery Telegram Bot (n8n, Groq API, Telegram API)
+  - **AI Face Attendance** — Computer Vision Automated Attendance System (Python, OpenCV, Eigenfaces, NumPy)
+  - **Developer OS Portfolio** — Interactive macOS Developer Portfolio (React, Tailwind CSS, Three.js, Framer Motion)
 - **Interactive Playground** — Step-by-step Algorithm runner, Systems Architecture visualizer, Applied AI pipeline explainer, in-browser SQL playground, Tech Stack inspector, and interactive mini-experiments.
 - **About Storybook** — Interactive multi-slide presentation with spring physics, animated character avatars, and career milestones.
 - **Skills & Toolbox** — Categorized folder structure (Languages, AI & ML, Frontend, Android, DevOps & Cloud, Databases & Tools) with experience years, project tags, and animated preview cards.
 - **Experience Highlights**:
   - **AWS Student Builder Leader** at **Amazon Web Services (AWS)** (2026 – Present) — spearheading campus cloud workshops, serverless computing labs, and student developer community building.
   - **Founder & Lead Developer** at **ElevateX Digital** (Jul 2026 – Present) — delivering turnkey SaaS platforms, enterprise AI integrations, and native mobile apps.
-  - **AI/ML Intern** at **FlyRank** (Jul 2026 – Aug 2026) — production semantic search, intent classification, and text processing pipelines in Python.
+  - **AI/ML Intern** at **Decode Labs** (Jul 2026 – Aug 2026) — production semantic search, intent classification, and text processing pipelines in Python.
   - **Open Source Contributor** at **Elite Coders Summer of Code (ECSoC 2026)** — active contributor to competitive open-source repositories under mentorship.
 - **Jarvis AI Portfolio Assistant** — Conversational AI assistant grounded in Peeyush's portfolio, with suggested prompts, streaming responses, and real-time chat.
 - **Interactive CRT Monitor & Lighting Keyboard** — In the Contact view, type directly into a virtual CRT monitor and watch a mechanical keyboard light up key-by-key in real-time as you type, with terminal submission action (`sendToPeeyush(form)`).
